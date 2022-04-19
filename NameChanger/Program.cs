@@ -10,8 +10,35 @@ namespace NameChanger
     class Program
     {
         private static string dataFileName = "names.csv";
+        private static string koreanPrefix = "소품_";
+        private static string engPrefix = "obj_";
+        private static string engSuffix = "_00";
 
         static void Main(string[] args)
+        {
+            var nameData = NameData(args[0]);
+            var koreanNames = FileNamesIn(args[1]);
+            nameData.ForEach(name =>
+            {
+                var t = koreanNames.Find(kName => kName.Contains(name.Korean));
+                if (t != null)
+                {
+                    var engName =
+                        $"{engPrefix}{name.English}{engSuffix}.{t.Split('.').Last()}";
+                    File.Move($"{args[1]}\\{t}", $"{args[1]}\\{engName}");
+                }
+            });
+        }
+
+        private static List<Name> NameData(string path)
+        {
+            using var file = File.OpenRead(path);
+            using var sr = new StreamReader(file, Encoding.UTF8);
+            using var csv = new CsvReader(sr, CultureInfo.InvariantCulture);
+            return csv.GetRecords<Name>().ToList();
+        }
+
+        private static void CreateData(string[] args)
         {
             var koreanNames = FileNamesIn(args[0]);
             var englishNames = FileNamesIn(args[1]);
